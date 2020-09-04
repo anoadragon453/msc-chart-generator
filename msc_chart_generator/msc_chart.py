@@ -178,22 +178,11 @@ class MSCChart(object):
         fig.add_trace(
             go.Scatter(
                 x=str_weeks,
-                y=new_mscs,
+                y=merged_mscs,
                 hoverinfo="x+y",
                 mode="lines",
-                name="New",
-                line=dict(width=0.5, color="#28a745"),
-                stackgroup="one",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=str_weeks,
-                y=fcp_mscs,
-                hoverinfo="x+y",
-                mode="lines",
-                name="FCP",
-                line=dict(width=0.5, color="yellow"),
+                name="Merged",
+                line=dict(width=0.5, color="#6f42c1"),
                 stackgroup="one",
             )
         )
@@ -211,11 +200,22 @@ class MSCChart(object):
         fig.add_trace(
             go.Scatter(
                 x=str_weeks,
-                y=merged_mscs,
+                y=fcp_mscs,
                 hoverinfo="x+y",
                 mode="lines",
-                name="Merged",
-                line=dict(width=0.5, color="#6f42c1"),
+                name="FCP",
+                line=dict(width=0.5, color="yellow"),
+                stackgroup="one",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=str_weeks,
+                y=new_mscs,
+                hoverinfo="x+y",
+                mode="lines",
+                name="New",
+                line=dict(width=0.5, color="#28a745"),
                 stackgroup="one",
             )
         )
