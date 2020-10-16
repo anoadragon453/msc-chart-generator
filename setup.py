@@ -9,7 +9,6 @@ setup(
     description="A library to generate MSC charts",
     packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=[
-        "PyGithub>=1.51",
         "plotly>=4.7.1",
         "pandas>=1.0.3",
         "psutil>=5.7.0",

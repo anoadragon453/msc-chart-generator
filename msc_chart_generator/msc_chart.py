@@ -3,7 +3,7 @@ from enum import Enum
 from time import sleep
 from typing import Dict, List, Optional, Tuple
 
-from github import Github
+import github
 from github.GithubException import RateLimitExceededException
 from github.Issue import Issue
 from github.IssueEvent import IssueEvent
@@ -29,33 +29,20 @@ class MSCChart(object):
     """A chart representing Matrix Spec Changes
 
     Args:
-        pygithub: A pygithub Github object for the library to use. If not set, github_token
-            must be set instead
-        github_token: A github auth token to perform API queries with
+        github_token: A github auth token to perform API queries with.
+            Only needs read:public_repo
         print_progress: Whether to print progress of chart generation to stdout
     """
 
     def __init__(
         self,
-        pygithub: Optional[Github] = None,
-        github_token: Optional[str] = None,
+        github_token: str,
         print_progress: bool = True,
     ):
+        self.github_token = github_token
         self.print_progress = print_progress
 
-        if pygithub:
-            g = pygithub
-        elif github_token:
-            g = Github(github_token)
-        else:
-            raise Exception(
-                "Either pygithub or github_token must be set when initializing MSCChart"
-            )
-
-        # Create a Github instance. The token only needs read:public_repo
-        self.repository = g.get_repo("matrix-org/matrix-doc")
-
-    def generate(self, type: ChartType, filepath: str):
+    async def generate(self, type: ChartType, filepath: str):
         """Generate the chart
 
         Args:
@@ -64,16 +51,16 @@ class MSCChart(object):
         """
         # Choose which chart type to generate
         if type == ChartType.PIE:
-            self._generate_msc_pie_chart(filepath)
+            await self._generate_msc_pie_chart(filepath)
         elif type == ChartType.STACKED_AREA:
-            self._generate_stacked_area_chart(filepath)
+            await self._generate_stacked_area_chart(filepath)
 
-    def _generate_stacked_area_chart(self, filepath: str):
+    async def _generate_stacked_area_chart(self, filepath: str):
         """Generates a historical stacked area chart of msc status"""
 
         # Get time of the earliest issue
         mscs = list(
-            self.repository.get_issues(
+            await self.repo.fetch_issues(
                 sort="created", state="all", direction="asc", labels=["proposal"],
             )
         )
@@ -233,7 +220,7 @@ class MSCChart(object):
         )
         fig.write_image(filepath)
 
-    def _get_msc_state_at_time(
+    async def _get_msc_state_at_time(
         self,
         msc: Issue,
         msc_events: List[Tuple[IssueEvent, Optional[Label]]],
@@ -327,19 +314,19 @@ class MSCChart(object):
 
         return state["state"]
 
-    def _generate_msc_pie_chart(self, filepath: str):
+    async def _generate_msc_pie_chart(self, filepath: str):
         # Get total number of {closed, open, merged, postponed, fcp} MSCs
-        fcp_mscs = self.repository.get_issues(
+        fcp_mscs = self.repo.get_issues(
             state="open", labels=["proposal", "final-comment-period"],
         ).totalCount
         open_mscs = (
-            self.repository.get_issues(state="open", labels=["proposal"]).totalCount
+            self.repo.get_issues(state="open", labels=["proposal"]).totalCount
             - fcp_mscs
         )
-        closed_mscs = self.repository.get_issues(
+        closed_mscs = self.repo.get_issues(
             state="closed", labels=["proposal", "rejected"],
         ).totalCount
-        postponed_mscs = self.repository.get_issues(
+        postponed_mscs = self.repo.get_issues(
             state="open",
             labels=[
                 "proposal",
@@ -348,7 +335,7 @@ class MSCChart(object):
             ],
         ).totalCount
         merged_mscs = (
-            self.repository.get_issues(state="closed", labels=["proposal"],).totalCount
+            self.repo.get_issues(state="closed", labels=["proposal"],).totalCount
             - closed_mscs
             - postponed_mscs
         )
